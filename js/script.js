@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     allPhotos: [],
     filteredPhotos: [],
     currentIndex: 0,
-    currentTheme: localStorage.getItem('theme') || 'light'
+    currentTheme: localStorage.getItem('theme') || 'light',
+    scrollPosition: 0
   };
 
   function initTheme() {
@@ -125,40 +126,48 @@ document.addEventListener('DOMContentLoaded', () => {
     displayPhotos();
   }
 
-  function openModal(index) {
-    AppState.currentIndex = index;
-    updateModalImage();
-    DOM.modal.style.display = "flex";
+  let isModalOpen = false;
+  let scrollPosition = 0;
 
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    AppState.scrollPosition = window.pageYOffset;
+  function openModal(index) {
+    if (isModalOpen) return;
+
+    isModalOpen = true;
+    AppState.currentIndex = index;
+
+    DOM.modalImg.src = AppState.filteredPhotos[index].urls.full;
+    DOM.modalImg.alt = AppState.filteredPhotos[index].alt_description || "Фото";
+
+    scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    document.body.style.cssText = `
+    overflow: hidden;
+    position: fixed;
+    top: -${scrollPosition}px;
+    width: 100%;
+  `;
+
+    DOM.modal.style.display = "flex";
   }
 
   function closeModal() {
+    if (!isModalOpen) return;
+
+    isModalOpen = false;
     DOM.modal.style.display = "none";
 
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    window.scrollTo(0, AppState.scrollPosition);
+    document.body.style.cssText = '';
+    window.scrollTo({ top: scrollPosition, behavior: 'instant' });
   }
 
   function updateModalImage() {
     DOM.modalImg.src = AppState.filteredPhotos[AppState.currentIndex].urls.full;
-    DOM.modalImg.alt = "Увеличенное изображение";
+    DOM.modalImg.alt = AppState.filteredPhotos[AppState.currentIndex].alt_description || "Фото";
   }
 
   function navigateImage(direction) {
     const step = direction === 'next' ? 1 : -1;
     AppState.currentIndex = (AppState.currentIndex + step + AppState.filteredPhotos.length) % AppState.filteredPhotos.length;
     updateModalImage();
-  }
-
-  function closeModal() {
-    DOM.modal.style.display = "none";
-    document.body.classList.remove("modal-open");
   }
 
   function createNavigationButtons() {
