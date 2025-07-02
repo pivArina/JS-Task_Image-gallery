@@ -1,17 +1,26 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const response = await fetch('/api/getUnsplashKey');
-  const data = await response.json();
+  try {
+    if (!window.UNSPLASH_CONFIG) {
+      const response = await fetch('/.netlify/functions/getUnsplashKey');
+      if (!response.ok) throw new Error('Failed to load API config');
 
+      const configData = await response.json();
 
-  if (data.ACCESS_KEY) {
-    window.UNSPLASH_CONFIG = { ACCESS_KEY: data.ACCESS_KEY };
-  } else {
-    showFatalError('API key not configured');
+      if (!configData.ACCESS_KEY) {
+        showFatalError('API key not configured');
+        return;
+      }
+
+      window.UNSPLASH_CONFIG = {
+        ACCESS_KEY: configData.ACCESS_KEY,
+        API_URL: 'https://api.unsplash.com'
+      };
+    }
+  } catch (error) {  
+    console.error('Error loading config:', error);
+    showFatalError('Failed to load configuration');
     return;
   }
-
-});
-
   const AppConfig = {
     DEFAULT_PHOTO_COUNT: 12,
     THEMES: ['light', 'dark', 'color']
