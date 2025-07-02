@@ -1,8 +1,16 @@
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.UNSPLASH_CONFIG?.ACCESS_KEY) {
+document.addEventListener('DOMContentLoaded', async () => {
+  const response = await fetch('/api/getUnsplashKey');
+  const data = await response.json();
+
+
+  if (data.ACCESS_KEY) {
+    window.UNSPLASH_CONFIG = { ACCESS_KEY: data.ACCESS_KEY };
+  } else {
     showFatalError('API key not configured');
     return;
   }
+
+});
 
   const AppConfig = {
     DEFAULT_PHOTO_COUNT: 12,
